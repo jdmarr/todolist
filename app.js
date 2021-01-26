@@ -49,23 +49,23 @@ const List = mongoose.model("List", listsSchema);
 
 app.get("/", function(req, res) {
 
-  Item.find({}, (err, results) => {
-    if (results.length === 0) {
-      // Insert defaults into the db, and redirect to "/"
-      Item.insertMany(defaultItems, (err) => {
-        if (err) {
-          console.log(err);
-        } else {
-          console.log("Successfully saved the default items.");
-        }
-        res.redirect("/");
-      });
+  List.findOne({name: ""}, (err, defaultList) => {
+    if(err){
+      console.log(err);
     } else {
-      // Render our list
-      res.render("list", {
-        listTitle: "Today",
-        newListItems: results
-      });
+      if(!defaultList){
+        list = new List({
+          name: "",
+          items: defaultItems
+        });
+        list.save().then(() => {
+          res.redirect("/");
+          console.log("Created default list");
+        });
+      } else {
+        // Render our list
+        res.render("list", {listTitle: "To-Do", newListItems: defaultList.items});
+      }
     }
   });
 });
@@ -79,9 +79,12 @@ app.post("/", function(req, res) {
     name: itemName
   });
 
-  if(listName === "Today"){
-    item.save().then(() => {
-      res.redirect("/");
+  if(listName === "To-Do"){
+    List.findOne({name: ""}, (err, list) => {
+      list.items.push(item);
+      list.save().then(() => {
+        res.redirect("/");
+      });
     });
   } else {
     List.findOne({name: listName}, (err, list) => {
@@ -99,12 +102,13 @@ app.post("/delete", (req, res) => {
   const checkedItemId = req.body.checkbox;
   const listName = req.body.list;
 
-  if(listName === "Today"){
-    Item.findByIdAndRemove(checkedItemId, (err) => {
-      if (err) {
+  if(listName === "To-Do"){
+    // Get default list, then pull from its items array the item which has _id===checkedItemId
+    List.findOneAndUpdate({name: ""}, {$pull: {items: {_id: checkedItemId}}}, (err, foundList) => {
+      if(err){
         console.log(err);
       } else {
-        console.log("Successfully deleted item with id " + checkedItemId);
+        console.log("Successfully deleted item with id " + checkedItemId + " from default list");
       }
       res.redirect("/");
     });
