@@ -131,28 +131,33 @@ app.get("/:customListName", function(req, res) {
 
   const customListName = _.capitalize(req.params.customListName);
 
-  List.findOne({
-    name: customListName
-  }, (err, customList) => {
-    if (!err) {
-      if (!customList) {
-        list = new List({
-          name: customListName,
-          items: defaultItems
-        });
-        list.save().then(() => {
-          res.redirect("/" + customListName);
-          console.log("Created new list");
-        });
-      } else {
-        res.render("list", {listTitle: customList.name, newListItems: customList.items });
-        console.log("Rendering existing list");
+  if(customListName === _.capitalize("To-Do")){
+    // Prevent custom list names that match the default but with different casing
+    res.redirect("/");
+  } else {
+    List.findOne({
+      name: customListName
+    }, (err, customList) => {
+      if (!err) {
+        if (!customList) {
+          list = new List({
+            name: customListName,
+            items: defaultItems
+          });
+          list.save().then(() => {
+            res.redirect("/" + customListName);
+            console.log("Created new list");
+          });
+        } else {
+          res.render("list", {listTitle: customList.name, newListItems: customList.items });
+          console.log("Rendering existing list");
+        }
       }
-    }
-    else {
-      console.log(err);
-    }
-  });
+      else {
+        console.log(err);
+      }
+    });
+  }
 });
 
 app.get("/about", function(req, res) {
