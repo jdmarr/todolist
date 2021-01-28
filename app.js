@@ -90,7 +90,7 @@ app.post("/", function(req, res) {
     List.findOne({name: listName}, (err, list) => {
       list.items.push(item);
       list.save().then(() => {
-        res.redirect("/" + listName);
+        res.redirect("/list/" + listName);
       });
     });
   }
@@ -120,14 +120,14 @@ app.post("/delete", (req, res) => {
       } else {
         console.log("Successfully deleted item with id " + checkedItemId + " from " + listName + " list");
       }
-      res.redirect("/" + listName);
+      res.redirect("/list/" + listName);
     });
   }
 
 
 })
 
-app.get("/:customListName", function(req, res) {
+app.get("/list/:customListName", function(req, res) {
 
   const customListName = _.capitalize(req.params.customListName);
 
@@ -145,7 +145,7 @@ app.get("/:customListName", function(req, res) {
             items: defaultItems
           });
           list.save().then(() => {
-            res.redirect("/" + customListName);
+            res.redirect("/list/" + customListName);
             console.log("Created new list");
           });
         } else {
